@@ -1,3 +1,6 @@
+#ifndef GO_CHAN
+#define GO_CHAN
+
 #include <cassert>
 #include <condition_variable>
 #include <memory>
@@ -310,3 +313,5 @@ class Chan : public IChan<T>, public OChan<T> {
 };
 
 }  // namespace go
+
+#endif  // GO_CHAN
