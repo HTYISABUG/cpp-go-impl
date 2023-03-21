@@ -9,7 +9,7 @@
 
 namespace go {
 
-#define DECLARE_ICHAN_FRIEND                                         \
+#define DECLARE_INPUT_CHANNEL_FRIEND                                 \
   template <template <typename> typename CH, typename U, typename V> \
   friend const std::shared_ptr<CH<U>>& operator<<(                   \
       const std::shared_ptr<CH<U>>& pCh, V&& value);                 \
@@ -24,7 +24,7 @@ namespace go {
   template <template <typename> typename CH, typename U>             \
   friend size_t cap(const std::shared_ptr<CH<U>>& pCh);
 
-#define DECLARE_OCHAN_FRIEND                                                  \
+#define DECLARE_OUTPUT_CHANNEL_FRIEND                                         \
   template <template <typename> typename CH, typename U>                      \
   friend U& operator<<(U& value, const std::shared_ptr<CH<U>>& pCh);          \
   template <template <typename> typename CH, typename U>                      \
@@ -41,10 +41,10 @@ namespace go {
   template <template <typename> typename CH, typename U>                      \
   friend size_t cap(const std::shared_ptr<CH<U>>& pCh);
 
-// IChan is a channel that can only send values in type T.
+// InputChannel is a channel that can only send values in type T.
 template <typename T>
-class IChan {
-  DECLARE_ICHAN_FRIEND
+class InputChannel {
+  DECLARE_INPUT_CHANNEL_FRIEND
 
  protected:
   virtual bool send(const T& value, bool blocking = true) = 0;
@@ -56,10 +56,10 @@ class IChan {
   virtual size_t cap() const = 0;
 };
 
-// OChan is a channel that can only receive values in type T.
+// OutputChannel is a channel that can only receive values in type T.
 template <typename T>
-class OChan {
-  DECLARE_OCHAN_FRIEND
+class OutputChannel {
+  DECLARE_OUTPUT_CHANNEL_FRIEND
 
  protected:
   virtual bool receive(T& value, bool& ok, bool blocking = true) = 0;
@@ -130,27 +130,27 @@ size_t cap(const std::shared_ptr<CH<U>>& pCh) {
 }
 
 /**
- * @brief Chan provides a mechanism for concurrently executing functions to
+ * @brief Channel provides a mechanism for concurrently executing functions to
  * communicate by sending and receiving values of a specified element type.
  *
- * Chan acts as first-in-first-out queues. For example, if one goroutine
+ * Channel acts as first-in-first-out queues. For example, if one goroutine
  * sends values on a channel and a second goroutine receives them, the values
  * are received in the order sent.
  *
- * Chan does not guarantee the order in which values are sent or received by
- * multiple threads. For example, if multiple threads send values to a Chan ,
+ * Channel does not guarantee the order in which values are sent or received by
+ * multiple threads. For example, if multiple threads send values to a Channel ,
  * the receiving order is unknown, since the sending order cannot be guaranteed.
  */
 template <typename T>
-class Chan : public IChan<T>, public OChan<T> {
-  DECLARE_ICHAN_FRIEND
-  DECLARE_OCHAN_FRIEND
+class Channel : public InputChannel<T>, public OutputChannel<T> {
+  DECLARE_INPUT_CHANNEL_FRIEND
+  DECLARE_OUTPUT_CHANNEL_FRIEND
 
  public:
   template <typename... Args>
-  static std::shared_ptr<Chan> make(Args&&... args) {
-    struct Wrapper : public Chan {
-      explicit Wrapper(Args&&... args) : Chan(std::forward<Args>(args)...) {}
+  static std::shared_ptr<Channel> make(Args&&... args) {
+    struct Wrapper : public Channel {
+      explicit Wrapper(Args&&... args) : Channel(std::forward<Args>(args)...) {}
     };
 
     return std::make_shared<Wrapper>(std::forward<Args>(args)...);
@@ -282,13 +282,13 @@ class Chan : public IChan<T>, public OChan<T> {
   using Lock = std::unique_lock<std::mutex>;
   using LockGuard = std::lock_guard<std::mutex>;
 
-  Chan() = default;
-  Chan(size_t cap) : mCap(cap) {}
+  Channel() = default;
+  Channel(size_t cap) : mCap(cap) {}
 
-  Chan(const Chan&) = delete;
-  Chan(Chan&&) = delete;
-  Chan& operator=(const Chan&) = delete;
-  Chan& operator=(Chan&&) = delete;
+  Channel(const Channel&) = delete;
+  Channel(Channel&&) = delete;
+  Channel& operator=(const Channel&) = delete;
+  Channel& operator=(Channel&&) = delete;
 
   const size_t mCap = 0;
 

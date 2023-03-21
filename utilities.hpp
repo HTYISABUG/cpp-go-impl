@@ -11,13 +11,13 @@
 namespace go {
 
 template <typename T>
-class IChan;
+class InputChannel;
 
 template <typename T>
-class OChan;
+class OutputChannel;
 
 template <typename T>
-class Chan;
+class Channel;
 
 class Select;
 
